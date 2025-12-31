@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Essential for Mobile: Prevents zooming on focus -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VIP Invitation - Ameer Hamza</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Playfair+Display:ital,wght@1,400&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --gold-glow: #FDB931;
+            --bg-black: #020202;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-black);
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden; /* Prevent scrollbars */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Background Canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Main Container */
+        #ui-layer {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Mobile Card Container */
+        .vip-terminal {
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 30px 20px;
+            width: 100%;
+            max-width: 380px; /* Narrower for mobile grip */
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            border-radius: 10px;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .vip-terminal::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            animation: scanline 4s infinite linear;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Typography */
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .text-gold { color: var(--gold); }
+        .text-glow { text-shadow: 0 0 15px var(--gold-glow); }
+
+        /* Inputs */
+        .vip-input {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--gold);
+            color: white;
+            text-align: center;
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            width: 100%;
+            padding: 12px;
+            margin: 20px 0;
+            border-radius: 4px;
+            outline: none;
+            caret-color: var(--gold);
+        }
+
+        /* Buttons */
+        .vip-btn {
+            background: linear-gradient(45deg, #8a6e2f, #D4AF37);
+            border: none;
+            color: black;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 14px 0;
+            width: 100%;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            transition: transform 0.1s;
+        }
+        .vip-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Transitions */
+        .step {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .step.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Loader */
+        .loader-bar-bg {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            margin-top: 20px;
+            border-radius: 2px;
+        }
+        .loader-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--gold);
+            box-shadow: 0 0 10px var(--gold);
+            transition: width 0.1s linear;
+        }
+
+        /* Final Reveal - Mobile Optimized */
+        .final-text {
+            font-size: 3.5rem; /* Big text for mobile */
+            line-height: 1;
+            background: linear-gradient(to bottom, #fff, var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
+            margin: 20px 0;
+        }
+
+        /* Mobile Specific Adjustments */
+        @media (max-width: 400px) {
+            .final-text { font-size: 2.8rem; }
+            .vip-input { font-size: 1rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 3D Background (Stars + Fireworks) -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- UI Layer -->
+    <div id="ui-layer">
+        
+        <div class="vip-terminal">
+            
+            <!-- STEP 1: Name -->
+            <div id="step-1" class="step active">
+                <p class="text-[var(--gold)] text-xs tracking-[0.3em] uppercase opacity-70 mb-2">Protocol 1</p>
+                <h2 class="font-cinzel text-xl text-white mb-4">Who are you?</h2>
+                <input type="text" id="input-name" class="vip-input" placeholder="Your Name" autocomplete="off">
+                <button class="vip-btn" onclick="nextStep(1)">NEXT</button>
+            </div>
+
+            <!-- STEP 2: Age -->
+            <div id="step-2" class="step">
+                <p class="text-[var(--gold)] text-xs tracking-[0.3em] uppercase opacity-70 mb-2">Protocol 2</p>
+                <h2 class="font-cinzel text-xl text-white mb-4">Your Age?</h2>
+                <input type="number" id="input-age" class="vip-input" placeholder="Age" inputmode="numeric">
+                <button class="vip-btn" onclick="nextStep(2)">NEXT</button>
+            </div>
+
+            <!-- STEP 3: Married -->
+            <div id="step-3" class="step">
+                <p class="text-[var(--gold)] text-xs tracking-[0.3em] uppercase opacity-70 mb-2">Protocol 3</p>
+                <h2 class="font-cinzel text-xl text-white mb-4">Marital Status?</h2>
+                <div class="flex gap-3">
+                    <button class="vip-btn" onclick="nextStep(3)">SINGLE</button>
+                    <button class="vip-btn" onclick="nextStep(3)">MARRIED</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: Loading -->
+            <div id="step-4" class="step">
+                <h2 class="font-cinzel text-lg text-gold animate-pulse">DECRYPTING...</h2>
+                <div class="loader-bar-bg">
+                    <div id="progress-bar" class="loader-bar"></div>
+                </div>
+                <p id="loading-text" class="text-[10px] text-gray-500 mt-3 font-mono uppercase"></p>
+            </div>
+
+            <!-- STEP 5: Reveal (AMEER HAMZA) -->
+            <div id="step-5" class="step">
+                <div class="mb-2">
+                    <span class="text-[var(--gold)] text-xs tracking-[0.5em] block">HAPPY NEW YEAR</span>
+                    <span class="text-[var(--gold)] text-[10px] tracking-widest block mb-4 opacity-60">FROM</span>
+                    
+                    <!-- The Main Name -->
+                    <h1 class="final-text font-cinzel font-black">AMEER<br>HAMZA</h1>
+                </div>
+                
+                <div class="w-12 h-[1px] bg-[var(--gold)] mx-auto opacity-50 mb-6"></div>
+                
+                <p class="text-gray-300 text-sm font-serif italic mb-8 leading-relaxed">
+                    May this year bring you infinite success and happiness.
+                </p>
+                
+                <button class="vip-btn text-xs" onclick="location.reload()">Replay</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- THREE.JS SETUP ---
+        const canvas = document.querySelector('#bg-canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: false, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimize for mobile
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020202, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 50;
+
+        // --- 1. BACKGROUND STARS ---
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsCount = 1000;
+        const starPos = new Float32Array(starsCount * 3);
+        
+        for(let i = 0; i < starsCount * 3; i++) {
+            starPos[i] = (Math.random() - 0.5) * 200;
+        }
+        starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const starsMaterial = new THREE.PointsMaterial({ color: 0x555555, size: 0.5 });
+        const starMesh = new THREE.Points(starsGeometry, starsMaterial);
+        scene.add(starMesh);
+
+        // --- 2. FIREWORKS SYSTEM ---
+        let fireworks = [];
+        let isFireworksTime = false;
+
+        // Helper to create explosion particles
+        function createExplosion(x, y, z, color) {
+            const count = 50;
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+            const velocities = [];
+            
+            for(let i=0; i<count; i++) {
+                positions.push(x, y, z);
+                // Random sphere explosion velocity
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.random() * Math.PI;
+                const speed = Math.random() * 0.5 + 0.2;
+                
+                velocities.push(
+                    speed * Math.sin(phi) * Math.cos(theta),
+                    speed * Math.sin(phi) * Math.sin(theta),
+                    speed * Math.cos(phi)
+                );
+            }
+            
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            
+            const material = new THREE.PointsMaterial({
+                color: color,
+                size: 0.8,
+                transparent: true,
+                opacity: 1,
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true
+            });
+
+            const points = new THREE.Points(geometry, material);
+            scene.add(points);
+            
+            return {
+                mesh: points,
+                velocities: velocities,
+                age: 0
+            };
+        }
+
+        // Helper to create a rocket
+        function createRocket() {
+            const startX = (Math.random() - 0.5) * 40;
+            const startY = -30;
+            
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute([startX, startY, 0], 3));
+            
+            const material = new THREE.PointsMaterial({ color: 0xffffff, size: 1 });
+            const mesh = new THREE.Points(geometry, material);
+            scene.add(mesh);
+
+            const targetY = (Math.random() * 20) + 10;
+            
+            // Random firework colors (Gold, Red, Blue, Green)
+            const colors = [0xD4AF37, 0xFF0000, 0x00FFFF, 0x00FF00, 0xFF00FF];
+            const finalColor = colors[Math.floor(Math.random() * colors.length)];
+
+            return {
+                mesh: mesh,
+                pos: new THREE.Vector3(startX, startY, 0),
+                vel: new THREE.Vector3(0, (Math.random() * 0.3) + 0.4, 0),
+                targetY: targetY,
+                color: finalColor,
+                isDead: false
+            };
+        }
+
+        // --- ANIMATION LOOP ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+
+            // Rotate Stars (Background)
+            starMesh.rotation.y += 0.0005;
+
+            // If Final Step is Active, launch fireworks
+            if (isFireworksTime) {
+                // Randomly launch rockets
+                if (Math.random() < 0.05) { 
+                    fireworks.push(createRocket());
+                }
+            }
+
+            // Update Fireworks
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                let fw = fireworks[i];
+
+                if (fw.isDead) {
+                    // It's an explosion
+                    fw.age += delta;
+                    const positions = fw.mesh.geometry.attributes.position.array;
+                    
+                    for(let j=0; j < fw.velocities.length; j+=3) { // x, y, z velocities
+                        // Update positions
+                        positions[j] += fw.velocities[j];     // x
+                        positions[j+1] += fw.velocities[j+1]; // y
+                        positions[j+2] += fw.velocities[j+2]; // z
+                        
+                        // Gravity
+                        fw.velocities[j+1] -= 0.01;
+                    }
+                    fw.mesh.geometry.attributes.position.needsUpdate = true;
+                    fw.mesh.material.opacity -= 0.015; // Fade out
+
+                    if (fw.mesh.material.opacity <= 0) {
+                        scene.remove(fw.mesh);
+                        fireworks.splice(i, 1);
+                    }
+
+                } else {
+                    // It's a rocket
+                    fw.pos.add(fw.vel);
+                    fw.mesh.geometry.attributes.position.setXYZ(0, fw.pos.x, fw.pos.y, fw.pos.z);
+                    
+                    // Check if reached target
+                    if (fw.pos.y >= fw.targetY) {
+                        scene.remove(fw.mesh);
+                        fireworks.splice(i, 1);
+                        // Create Explosion
+                        fireworks.push(createExplosion(fw.pos.x, fw.pos.y, fw.pos.z, fw.color));
+                        fireworks[fireworks.length - 1].isDead = true;
+                    }
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize Handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+
+        // --- UI LOGIC ---
+        const userData = { name: "", age: "", married: "" };
+
+        function nextStep(current) {
+            // Validate Step 1
+            if (current === 1) {
+                const val = document.getElementById('input-name').value;
+                if (!val) return;
+                userData.name = val;
+            }
+            // Validate Step 2
+            if (current === 2) {
+                const val = document.getElementById('input-age').value;
+                if (!val) return;
+                userData.age = val;
+            }
+
+            // Transition
+            const currentEl = document.getElementById(`step-${current}`);
+            currentEl.classList.remove('active');
+
+            const nextId = current + 1;
+            
+            setTimeout(() => {
+                document.getElementById(`step-${nextId}`).classList.add('active');
+
+                if (nextId === 4) {
+                    runLoader();
+                }
+                if (nextId === 5) {
+                    isFireworksTime = true; // Turn on Fireworks!
+                }
+            }, 400);
+        }
+
+        function runLoader() {
+            const bar = document.getElementById('progress-bar');
+            const txt = document.getElementById('loading-text');
+            const msgs = ["Checking Database...", "Analyzing Status...", "Generating VIP Message...", "Loading Fireworks..."];
+            
+            let w = 0;
+            let msgIdx = 0;
+            
+            const interval = setInterval(() => {
+                w += 1;
+                bar.style.width = w + '%';
+                
+                if (w % 25 === 0 && msgIdx < msgs.length) {
+                    txt.innerText = msgs[msgIdx];
+                    msgIdx++;
+                }
+
+                if (w >= 100) {
+                    clearInterval(interval);
+                    nextStep(4);
+                }
+            }, 30); // 3 seconds load
+        }
+
+    </script>
+</body>
+</html>
